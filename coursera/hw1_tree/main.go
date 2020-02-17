@@ -8,7 +8,6 @@ import (
 func dirTree(out io.Writer, path string, printFiles bool) error {
 	// TODO
 	// ...
-	// ...
 	return nil
 }
 
