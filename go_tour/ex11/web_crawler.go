@@ -41,8 +41,10 @@ func Crawl(url string, depth int, fetcher Fetcher) {
 			return
 		}
 		fmt.Printf("found: %s %q\n", url, body)
+		// Перебор всех url полученных от Fetch
 		for _, u := range urls {
 			wg.Add(1)
+			// Распараллеливание задачи поиска
 			go crawlRecursive(u, depth-1)
 		}
 	}
