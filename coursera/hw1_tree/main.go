@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 )
 
+// Пока что реализован только рекурсивный обход всех директорий
 func dirTree(out io.Writer, path string, printFiles bool) error {
 	fileObj, err := os.Open(path)
 	if err != nil {
