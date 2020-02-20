@@ -5,19 +5,27 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"time"
+	"sync"
 )
 
 var ExecutePipeline = func(jobs ...job) {
 	in := make(chan interface{})
+	wg := &sync.WaitGroup{}
 
 	for _, job := range jobs {
 		out := make(chan interface{})
-		go job(in, out)
+		wg.Add(1)
+		go worker(job, in, out, wg)
 		in = out
 	}
-	close(in)
-	time.Sleep(60 * time.Second)
+	wg.Wait()
+}
+
+// Обертка для запуска job, чтобы дождаться выполнения всех горутин
+func worker(job job, in, out chan interface{}, wg *sync.WaitGroup) {
+	defer wg.Done()
+	defer close(out)
+	job(in, out)
 }
 
 var SingleHash = func(in, out chan interface{}) {
