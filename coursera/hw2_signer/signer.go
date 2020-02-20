@@ -58,16 +58,25 @@ var SingleHash = func(in, out chan interface{}) {
 }
 
 var MultiHash = func(in, out chan interface{}) {
-	for i := range in {
-		var sum = ""
-		for j := 0; j < 6; j++ {
-			dataCrc32 := DataSignerCrc32(strconv.Itoa(j) + i.(string))
-			fmt.Printf("%s MultiHash: crc32(th+step1)) %d %s\n", i.(string), j, dataCrc32)
-			sum += dataCrc32
-		}
-		fmt.Printf("%s MultiHash result:\n%s\n", i.(string), sum)
-		out <- sum
+	wg := &sync.WaitGroup{}
+	for dataIn := range in {
+		wg.Add(1)
+		go func(data string) {
+			wgCrc32 := &sync.WaitGroup{}
+			dataCrc32 := make([]string, 6)
+			for i := 0; i < 6; i++ {
+				wgCrc32.Add(1)
+				go func(i int, dataCrc32 []string, wgCrc32 *sync.WaitGroup, data string) {
+					dataCrc32[i] = DataSignerCrc32(strconv.Itoa(i) + data)
+					wgCrc32.Done()
+				}(i, dataCrc32, wgCrc32, data)
+			}
+			wgCrc32.Wait()
+			out <- strings.Join(dataCrc32, "")
+			wg.Done()
+		}(dataIn.(string))
 	}
+	wg.Wait()
 }
 
 var CombineResults = func(in, out chan interface{}) {
