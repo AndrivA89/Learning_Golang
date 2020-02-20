@@ -12,20 +12,17 @@ var ExecutePipeline = func(jobs ...job) {
 	in := make(chan interface{})
 	wg := &sync.WaitGroup{}
 
-	for _, job := range jobs {
+	for _, jobItem := range jobs {
 		out := make(chan interface{})
 		wg.Add(1)
-		go worker(job, in, out, wg)
+		go func(jobItem job, in, out chan interface{}, wg *sync.WaitGroup) {
+			defer wg.Done()
+			defer close(out)
+			jobItem(in, out)
+		}(jobItem, in, out, wg)
 		in = out
 	}
 	wg.Wait()
-}
-
-// Обертка для запуска job, чтобы дождаться выполнения всех горутин
-func worker(job job, in, out chan interface{}, wg *sync.WaitGroup) {
-	defer wg.Done()
-	defer close(out)
-	job(in, out)
 }
 
 // Воркер для SingleHash. По аналогии с job
