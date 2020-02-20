@@ -32,11 +32,15 @@ func worker(job job, in, out chan interface{}, wg *sync.WaitGroup) {
 func workerSingleHash(in int, out chan interface{}, mu *sync.Mutex, wg *sync.WaitGroup) {
 	defer wg.Done()
 	data := strconv.Itoa(in)
+	dataHashChan := make(chan string)
 	mu.Lock() // чтобы не было "OverheatLock happend"
 	dataMd5 := DataSignerMd5(data)
 	mu.Unlock()
+	go func(dataHash string, outChan chan string) {
+		outChan <- DataSignerCrc32(dataHash)
+	}(data, dataHashChan)
 	dataCrc32Md5 := DataSignerCrc32(dataMd5)
-	dataCrc32 := DataSignerCrc32(data)
+	dataCrc32 := <-dataHashChan
 	fmt.Printf("%s SingleHash data %s\n", data, data)
 	fmt.Printf("%s SingleHash md5(data) %s\n", data, dataMd5)
 	fmt.Printf("%s SingleHash crc32(md5(data)) %s\n", data, dataCrc32Md5)
