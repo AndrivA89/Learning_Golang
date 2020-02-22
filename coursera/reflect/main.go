@@ -11,8 +11,8 @@
 	Вывожу данные после добавления информации со структуры User
 
 	2-й сценарий:
-	Расчет суммы всех транспортных средств
-	В функцию суммирования поступает любая структура, которая описывает ТС
+	Расчет суммы стоимостей всех транспортных средств
+	В функцию суммирования поступает слайс из любых структур, которые описывают ТС
 	Находим поле со стоимостью и плюсуем
 	В случае отсутствия поля или необходимого типа - возвращаем ошибку
 */
@@ -53,6 +53,14 @@ type Avto struct {
 	HorsePower int
 	Type       string
 	Cost       float64
+	Mileage    float64
+}
+
+type AvtoErr struct {
+	Model      string
+	HorsePower int
+	Type       string
+	Cost       int
 	Mileage    float64
 }
 
@@ -105,7 +113,11 @@ func CalculatingTheCost(data []interface{}) (cost float64, err error) {
 		if reflect.TypeOf(d).Kind() == reflect.Struct {
 			for j := 0; j < reflect.ValueOf(d).NumField(); j++ {
 				if reflect.TypeOf(d).Field(j).Name == "Cost" {
-					cost += reflect.ValueOf(d).Field(j).Float()
+					if reflect.TypeOf(d).Field(j).Type.String() == "float64" {
+						cost += reflect.ValueOf(d).Field(j).Float()
+					} else {
+						bufErr += "Data " + strconv.Itoa(i) + " incorrect type \"Cost\"!!!\n"
+					}
 				}
 			}
 		} else {
@@ -153,10 +165,11 @@ func VechicleAndCost() {
 	vechicle := Vechicle{Cost: 5500.11}
 	avto := Avto{Cost: 1250.22}
 	moto := Moto{Cost: 250.33}
-	errorData := []int{12, 13, 14}
+	errorData1 := []int{12, 13, 14}
+	errorData2 := AvtoErr{Cost: 9000}
 
 	data := make([]interface{}, 0)
-	data = append(data, vechicle, avto, moto, errorData, errorData)
+	data = append(data, vechicle, avto, moto, errorData1, errorData2)
 
 	cost, err := CalculatingTheCost(data)
 	fmt.Printf("Cost all vechicles equals - %1.2f\n", cost)
