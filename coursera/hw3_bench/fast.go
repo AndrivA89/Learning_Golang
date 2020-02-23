@@ -12,7 +12,7 @@ import (
 // более быстрая и оптимальная версия функции SlowSearch
 // заменил regexp.MatchString на более быструю strings.Contains
 // и r.ReplaceAllString на strings.ReplaceAll
-// следующее слабое место -
+// следующее слабое место - bytes makeSlice (22% памяти)
 func FastSearch(out io.Writer) {
 	file, err := os.Open(filePath)
 	if err != nil {
